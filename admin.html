@@ -3,50 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartPick Admin - Cashback Claims</title>
+  <title>SmartPick Admin - Cashback Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
 </head>
-<body class="bg-slate-900 text-white p-6">
-  <div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between pb-6 border-b border-slate-700">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Top Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
       <div>
-        <h1 class="text-2xl font-bold text-rose-500">SmartPick Superstore</h1>
-        <p class="text-sm text-slate-400">Live Cashback Claims Dashboard</p>
+        <div class="flex items-center gap-2">
+          <span class="text-rose-500 text-xl"><i class="fa-solid fa-gift"></i></span>
+          <h1 class="text-2xl font-extrabold text-white">SmartPick Superstore</h1>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Live Cashback Claims & Verification Portal</p>
       </div>
-      <button onclick="loadClaims()" class="bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
-        Refresh Data
-      </button>
+
+      <!-- Quick Stats Counters -->
+      <div class="flex items-center gap-3">
+        <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-2xl text-center">
+          <span class="text-xs text-slate-400 block font-semibold">Total</span>
+          <span id="statTotal" class="text-lg font-bold text-white">0</span>
+        </div>
+        <div class="bg-amber-950/40 border border-amber-800/60 px-4 py-2 rounded-2xl text-center">
+          <span class="text-xs text-amber-400 block font-semibold">Pending</span>
+          <span id="statPending" class="text-lg font-bold text-amber-300">0</span>
+        </div>
+        <div class="bg-emerald-950/40 border border-emerald-800/60 px-4 py-2 rounded-2xl text-center">
+          <span class="text-xs text-emerald-400 block font-semibold">Done / Paid</span>
+          <span id="statDone" class="text-lg font-bold text-emerald-300">0</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Table -->
-    <div class="mt-6 overflow-x-auto bg-slate-800 rounded-2xl p-4 border border-slate-700">
-      <table class="w-full text-left text-sm">
-        <thead class="text-xs uppercase bg-slate-700/60 text-slate-300">
-          <tr>
-            <th class="p-3">Time</th>
-            <th class="p-3">Platform</th>
-            <th class="p-3">Order ID</th>
-            <th class="p-3">Customer</th>
-            <th class="p-3">UPI ID</th>
-            <th class="p-3">Screenshot Preview</th>
-          </tr>
-        </thead>
-        <tbody id="claimsBody" class="divide-y divide-slate-700 text-slate-200">
-          <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading claims...</td></tr>
-        </tbody>
-      </table>
+    <!-- Table Container -->
+    <div class="bg-slate-800/90 rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden">
+      <div class="p-4 bg-slate-800/60 border-b border-slate-700 flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Claims Records</span>
+        <span class="text-xs text-slate-400"><i class="fa-solid fa-bolt text-amber-400"></i> Real-time synced with Firebase</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="text-[11px] uppercase tracking-wider bg-slate-900/50 text-slate-400 border-b border-slate-700">
+            <tr>
+              <th class="p-3.5">Time</th>
+              <th class="p-3.5">Platform</th>
+              <th class="p-3.5">Order ID</th>
+              <th class="p-3.5">Customer Name</th>
+              <th class="p-3.5">UPI ID</th>
+              <th class="p-3.5 text-center">Screenshot</th>
+              <th class="p-3.5 text-center">Status</th>
+              <th class="p-3.5 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="claimsBody" class="divide-y divide-slate-700/60 text-slate-200">
+            <tr>
+              <td colspan="8" class="p-8 text-center text-slate-400">Loading claims data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
-  <!-- Image Modal -->
-  <div id="imageModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50" onclick="this.classList.add('hidden')">
-    <img id="modalImg" src="" class="max-h-[85vh] max-w-[90vw] rounded-xl shadow-2xl border border-slate-700">
+  <!-- Fullscreen Image Modal -->
+  <div id="imageModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-50 backdrop-blur-sm cursor-zoom-out" onclick="closeImage()">
+    <div class="relative max-w-2xl max-h-[90vh]">
+      <img id="modalImg" src="" class="max-h-[85vh] max-w-full rounded-2xl shadow-2xl border border-slate-700 object-contain">
+      <p class="text-center text-xs text-slate-400 mt-2">Click anywhere to close</p>
+    </div>
   </div>
 
   <script>
+    // Aapka Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB9u8OFjqWEyITqXTAQzWu9H2_27gftPE",
       authDomain: "smartpick-rewards.firebaseapp.com",
@@ -62,43 +104,114 @@
 
     function showImage(src) {
       document.getElementById('modalImg').src = src;
-      document.getElementById('imageModal').classList.remove('hidden');
-      document.getElementById('imageModal').classList.add('flex');
+      const modal = document.getElementById('imageModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
 
-    function loadClaims() {
+    function closeImage() {
+      const modal = document.getElementById('imageModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Direct Status Change (Pending <-> Done)
+    async function updateStatus(key, currentStatus) {
+      const newStatus = currentStatus === "Done" ? "Pending" : "Done";
+      try {
+        await db.ref(`cashback_orders/${key}`).update({
+          status: newStatus
+        });
+      } catch (err) {
+        alert("Status update failed: " + err.message);
+      }
+    }
+
+    // Copy UPI ID with feedback
+    function copyUPI(upi) {
+      navigator.clipboard.writeText(upi);
+      alert("UPI Copied: " + upi);
+    }
+
+    // Live Firebase Listener
+    function listenToClaims() {
       db.ref("cashback_orders").on("value", (snapshot) => {
         const data = snapshot.val();
         const tbody = document.getElementById("claimsBody");
         tbody.innerHTML = "";
 
         if (!data) {
-          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No submissions yet</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-400">No submissions found yet.</td></tr>';
+          document.getElementById("statTotal").innerText = 0;
+          document.getElementById("statPending").innerText = 0;
+          document.getElementById("statDone").innerText = 0;
           return;
         }
 
+        let total = 0;
+        let pending = 0;
+        let done = 0;
+
         const entries = Object.entries(data).reverse();
         entries.forEach(([key, val]) => {
+          total++;
+          const currentStatus = val.status || "Pending";
+          if (currentStatus === "Done") {
+            done++;
+          } else {
+            pending++;
+          }
+
+          const isDone = currentStatus === "Done";
           const row = document.createElement("tr");
-          row.className = "hover:bg-slate-700/40 transition";
+          row.className = "hover:bg-slate-700/30 transition";
+
           row.innerHTML = `
-            <td class="p-3 text-xs text-slate-400">${val.timestamp || "N/A"}</td>
-            <td class="p-3 font-semibold text-rose-400">${val.platform || "N/A"}</td>
-            <td class="p-3 font-mono text-xs">${val.orderId || "N/A"}</td>
-            <td class="p-3">${val.customerName || "N/A"}</td>
-            <td class="p-3 font-mono text-emerald-400 select-all">${val.upiId || "N/A"}</td>
-            <td class="p-3">
+            <td class="p-3.5 text-xs text-slate-400 whitespace-nowrap">${val.timestamp || "N/A"}</td>
+            <td class="p-3.5 font-bold text-rose-400">${val.platform || "N/A"}</td>
+            <td class="p-3.5 font-mono text-xs select-all text-slate-300">${val.orderId || "N/A"}</td>
+            <td class="p-3.5 font-semibold text-slate-100">${val.customerName || "N/A"}</td>
+            <td class="p-3.5 font-mono text-emerald-400">
+              <span class="cursor-pointer hover:underline" title="Click to copy" onclick="copyUPI('${val.upiId}')">
+                ${val.upiId || "N/A"} <i class="fa-regular fa-copy text-xs ml-1 text-slate-400"></i>
+              </span>
+            </td>
+            <td class="p-3.5 text-center">
               ${val.reviewScreenshot ? 
-                `<img src="${val.reviewScreenshot}" onclick="showImage('${val.reviewScreenshot}')" class="w-14 h-14 object-cover rounded-lg border border-slate-600 cursor-pointer hover:scale-105 transition" title="Click to enlarge">` 
+                `<img src="${val.reviewScreenshot}" onclick="showImage('${val.reviewScreenshot}')" class="w-12 h-12 object-cover rounded-xl border border-slate-600 mx-auto cursor-pointer hover:scale-110 transition shadow-sm" title="Click to view full image">` 
                 : '<span class="text-xs text-slate-500">No Image</span>'}
+            </td>
+            <td class="p-3.5 text-center whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                isDone 
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+              }">
+                <i class="fa-solid ${isDone ? 'fa-check' : 'fa-clock'} text-[10px]"></i>
+                ${currentStatus}
+              </span>
+            </td>
+            <td class="p-3.5 text-center whitespace-nowrap">
+              <button onclick="updateStatus('${key}', '${currentStatus}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 mx-auto ${
+                isDone 
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' 
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
+              }">
+                <i class="fa-solid ${isDone ? 'fa-rotate-left' : 'fa-check'}"></i>
+                ${isDone ? 'Mark as Pending' : 'Mark as Done'}
+              </button>
             </td>
           `;
           tbody.appendChild(row);
         });
+
+        document.getElementById("statTotal").innerText = total;
+        document.getElementById("statPending").innerText = pending;
+        document.getElementById("statDone").innerText = done;
       });
     }
 
-    loadClaims();
+    listenToClaims();
   </script>
 </body>
 </html>
