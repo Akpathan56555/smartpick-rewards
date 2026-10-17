@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartPick Admin - Cashback Claims</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-900 text-white p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between pb-6 border-b border-slate-700">
+      <div>
+        <h1 class="text-2xl font-bold text-rose-500">SmartPick Superstore</h1>
+        <p class="text-sm text-slate-400">Live Cashback Claims Dashboard</p>
+      </div>
+      <button onclick="loadClaims()" class="bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+        Refresh Data
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="mt-6 overflow-x-auto bg-slate-800 rounded-2xl p-4 border border-slate-700">
+      <table class="w-full text-left text-sm">
+        <thead class="text-xs uppercase bg-slate-700/60 text-slate-300">
+          <tr>
+            <th class="p-3">Time</th>
+            <th class="p-3">Platform</th>
+            <th class="p-3">Order ID</th>
+            <th class="p-3">Customer</th>
+            <th class="p-3">UPI ID</th>
+            <th class="p-3">Screenshot Preview</th>
+          </tr>
+        </thead>
+        <tbody id="claimsBody" class="divide-y divide-slate-700 text-slate-200">
+          <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading claims...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div id="imageModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50" onclick="this.classList.add('hidden')">
+    <img id="modalImg" src="" class="max-h-[85vh] max-w-[90vw] rounded-xl shadow-2xl border border-slate-700">
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9u8OFjqWEyITqXTAQzWu9H2_27gftPE",
+      authDomain: "smartpick-rewards.firebaseapp.com",
+      databaseURL: "https://smartpick-rewards-default-rtdb.firebaseio.com",
+      projectId: "smartpick-rewards",
+      storageBucket: "smartpick-rewards.firebasestorage.app",
+      messagingSenderId: "479146809917",
+      appId: "1:479146809917:web:7d777218b51532d3cfe054"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function showImage(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imageModal').classList.remove('hidden');
+      document.getElementById('imageModal').classList.add('flex');
+    }
+
+    function loadClaims() {
+      db.ref("cashback_orders").on("value", (snapshot) => {
+        const data = snapshot.val();
+        const tbody = document.getElementById("claimsBody");
+        tbody.innerHTML = "";
+
+        if (!data) {
+          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No submissions yet</td></tr>';
+          return;
+        }
+
+        const entries = Object.entries(data).reverse();
+        entries.forEach(([key, val]) => {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-slate-700/40 transition";
+          row.innerHTML = `
+            <td class="p-3 text-xs text-slate-400">${val.timestamp || "N/A"}</td>
+            <td class="p-3 font-semibold text-rose-400">${val.platform || "N/A"}</td>
+            <td class="p-3 font-mono text-xs">${val.orderId || "N/A"}</td>
+            <td class="p-3">${val.customerName || "N/A"}</td>
+            <td class="p-3 font-mono text-emerald-400 select-all">${val.upiId || "N/A"}</td>
+            <td class="p-3">
+              ${val.reviewScreenshot ? 
+                `<img src="${val.reviewScreenshot}" onclick="showImage('${val.reviewScreenshot}')" class="w-14 h-14 object-cover rounded-lg border border-slate-600 cursor-pointer hover:scale-105 transition" title="Click to enlarge">` 
+                : '<span class="text-xs text-slate-500">No Image</span>'}
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    loadClaims();
+  </script>
+</body>
+</html>
