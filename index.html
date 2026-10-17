@@ -114,15 +114,29 @@
   </div>
 
   <script>
-    // Free Public ImgBB API Key
-    const IMGBB_API_KEY = "6d207e02198a847aa5a0a0330f4029c3";
+    // Free Public Upload Endpoint via tmpfiles (Direct HTTPS URL, zero CORS issue)
+    async function uploadImageToServer(file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("https://tmpfiles.org/api/v1/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (data && data.data && data.data.url) {
+        // tmpfiles direct image URL format
+        return data.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+      }
+      throw new Error("Upload failed");
+    }
 
     async function submitRewardForm(e) {
       e.preventDefault();
 
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Uploading Screenshot...`;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Screenshot upload ho raha hai...`;
 
       const platform = document.getElementById("platform").value;
       const orderId = document.getElementById("orderId").value.trim();
@@ -131,38 +145,27 @@
       const fileInput = document.getElementById("screenshotFile");
       const file = fileInput.files[0];
 
-      let screenshotUrl = "No screenshot provided";
+      let screenshotUrl = "Screenshot upload nahi ho paya";
 
-      // Step 1: Upload image to Free ImgBB Server
       try {
-        const imgFormData = new FormData();
-        imgFormData.append("image", file);
-
-        const imgResponse = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-          method: "POST",
-          body: imgFormData
-        });
-
-        const imgData = await imgResponse.json();
-        if (imgData.success) {
-          screenshotUrl = imgData.data.url;
+        if (file) {
+          screenshotUrl = await uploadImageToServer(file);
         }
-      } catch (uploadError) {
-        console.error("Image upload failed, continuing with details:", uploadError);
+      } catch (err) {
+        console.error("Direct upload error:", err);
       }
 
-      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Submitting Claim...`;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Details bheji ja rahi hain...`;
 
-      // Step 2: Send Form Data + Screenshot Link to Web3Forms
       const web3Data = {
         access_key: "07eb993a-4e91-4945-a99f-34d0b8698650",
-        subject: `🎉 Cashback Claim: ${orderId} (${platform})`,
+        subject: `🎉 New Cashback Claim: ${orderId} (${platform})`,
         from_name: "SmartPick Rewards Portal",
         Platform: platform,
         Order_ID: orderId,
         Customer_Name: name,
         UPI_ID: upiId,
-        Screenshot_Review_Link: screenshotUrl
+        Screenshot_Image_Link: screenshotUrl
       };
 
       try {
@@ -180,12 +183,12 @@
           document.getElementById("formContainer").classList.add("hidden");
           document.getElementById("successBox").classList.remove("hidden");
         } else {
-          alert("Submission error: " + (result.message || "Please try again"));
+          alert("Submission error: " + (result.message || "Kripya dobara try karein"));
           btn.disabled = false;
           btn.innerHTML = `<span>Claim ₹20 - ₹200 Cashback</span>`;
         }
-      } catch (err) {
-        alert("Error sending details. Please try again.");
+      } catch (networkErr) {
+        alert("Network issue, dobara try karein!");
         btn.disabled = false;
         btn.innerHTML = `<span>Claim ₹20 - ₹200 Cashback</span>`;
       }
