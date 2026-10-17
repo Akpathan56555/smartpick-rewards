@@ -56,18 +56,25 @@
         </div>
         <div class="flex items-start gap-2.5">
           <span class="w-5 h-5 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center text-[11px] shrink-0 mt-0.5">3</span>
-          <p>Neeche details fill karke screenshot attach karein aur <b>Claim Now</b> dabayein.</p>
+          <p>Neeche saari details bharein, screenshot attach karein aur <b>Claim Now</b> dabayein.</p>
         </div>
       </div>
     </div>
 
     <!-- Form Section -->
     <div class="p-5" id="formContainer">
+      <p class="text-[11px] text-rose-500 font-bold mb-3 flex items-center gap-1">
+        <i class="fa-solid fa-asterisk text-[9px]"></i> Saari details bharna zaroori (mandatory) hai:
+      </p>
+
       <form id="rewardForm" class="space-y-4" onsubmit="submitClaim(event)">
         
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Shopping Platform</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            Shopping Platform <span class="text-rose-500 font-bold">*</span>
+          </label>
           <select id="platform" required class="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
+            <option value="" disabled selected>Apna platform chunein</option>
             <option value="Meesho">Meesho</option>
             <option value="Amazon">Amazon</option>
             <option value="Flipkart">Flipkart</option>
@@ -75,24 +82,33 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Order ID / Sub-Order ID</label>
-          <input type="text" id="orderId" placeholder="e.g. 341676261834163264" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            Order ID / Sub-Order ID <span class="text-rose-500 font-bold">*</span>
+          </label>
+          <input type="text" id="orderId" placeholder="e.g. 341676261834163264" required minlength="5" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Aapka Poora Name</label>
-          <input type="text" id="custName" placeholder="Apna naam darj karein" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            Aapka Poora Name <span class="text-rose-500 font-bold">*</span>
+          </label>
+          <input type="text" id="custName" placeholder="Apna naam darj karein" required minlength="2" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">UPI ID (Cashback ke liye)</label>
-          <input type="text" id="upiId" placeholder="e.g. mobile@paytm / name@okaxis" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            UPI ID (Cashback ke liye) <span class="text-rose-500 font-bold">*</span>
+          </label>
+          <input type="text" id="upiId" placeholder="e.g. mobile@paytm / name@okaxis" required minlength="5" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition">
           <p class="text-[10px] text-gray-400 mt-1">GPay / PhonePe / Paytm UPI ID</p>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">5-Star Review Screenshot</label>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            5-Star Review Screenshot <span class="text-rose-500 font-bold">*</span>
+          </label>
           <input type="file" id="screenshotFile" accept="image/*" required class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 border border-slate-200 rounded-xl p-1 bg-slate-50 cursor-pointer">
+          <p class="text-[10px] text-slate-400 mt-1">Review photo upload karna anivarya hai.</p>
         </div>
 
         <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-rose-500/25 transition active:scale-[0.99] flex items-center justify-center gap-2">
@@ -121,7 +137,6 @@
   </div>
 
   <script>
-    // Aapka Exact Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB9u8OFjqWEyITqXTAQzWu9H2_27gftPE",
       authDomain: "smartpick-rewards.firebaseapp.com",
@@ -132,11 +147,9 @@
       appId: "1:479146809917:web:7d777218b51532d3cfe054"
     };
 
-    // Firebase Init
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Image Compression Helper
     function compressImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -173,10 +186,6 @@
     async function submitClaim(e) {
       e.preventDefault();
 
-      const btn = document.getElementById("submitBtn");
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Saving to Database...`;
-
       const platform = document.getElementById("platform").value;
       const orderId = document.getElementById("orderId").value.trim();
       const name = document.getElementById("custName").value.trim();
@@ -184,29 +193,51 @@
       const fileInput = document.getElementById("screenshotFile");
       const file = fileInput.files[0];
 
-      let base64Image = "";
-      if (file) {
-        base64Image = await compressImage(file);
+      // Strict JavaScript Validation
+      if (!platform) {
+        alert("Kripya Shopping Platform select karein!");
+        return;
+      }
+      if (!orderId) {
+        alert("Kripya apna Order ID darj karein!");
+        return;
+      }
+      if (!name) {
+        alert("Kripya apna Poora Name darj karein!");
+        return;
+      }
+      if (!upiId || !upiId.includes("@")) {
+        alert("Kripya sahi UPI ID darj karein (jaise: name@okhdfcbank ya number@paytm)!");
+        return;
+      }
+      if (!file) {
+        alert("Kripya 5-Star Review ka screenshot upload karein!");
+        return;
       }
 
-      const record = {
-        platform: platform,
-        orderId: orderId,
-        customerName: name,
-        upiId: upiId,
-        reviewScreenshot: base64Image,
-        status: "Pending",
-        timestamp: new Date().toLocaleString()
-      };
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Submitting...`;
 
       try {
-        // Direct Push to Firebase Database
+        const base64Image = await compressImage(file);
+
+        const record = {
+          platform: platform,
+          orderId: orderId,
+          customerName: name,
+          upiId: upiId,
+          reviewScreenshot: base64Image,
+          status: "Pending",
+          timestamp: new Date().toLocaleString()
+        };
+
         await db.ref("cashback_orders").push(record);
 
         document.getElementById("formContainer").classList.add("hidden");
         document.getElementById("successBox").classList.remove("hidden");
       } catch (err) {
-        alert("Database error: " + err.message);
+        alert("Error: " + err.message);
         btn.disabled = false;
         btn.innerHTML = `<span>Claim ₹20 - ₹200 Cashback</span>`;
       }
